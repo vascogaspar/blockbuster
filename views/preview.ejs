@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link href="https://vjs.zencdn.net/7.5.5/video-js.css" rel="stylesheet" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <video
+      width="2000"
+      height="1200"
+      class="preview-video video-js vjs-default-skin"
+      controls
+    >
+      <source src="<%= url %>" type="application/x-mpegURL" />
+    </video>
+
+    <script src="https://unpkg.com/video.js/dist/video.js"></script>
+    <script>
+      document.querySelectorAll(".preview-video").forEach(function(pl) {
+        videojs(pl),
+          {
+            liveui: true
+          };
+      });
+    </script>
+  </body>
+</html>

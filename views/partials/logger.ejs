@@ -1,0 +1,13 @@
+<code id="logger"></code>
+
+<script>
+  const evtSource = new EventSource("/stream", { withCredentials: false });
+
+  evtSource.onmessage = function(event) {
+    console.log(event.type, event.data, event);
+    $("#logger").append(`
+      <p>${event.data}</p>
+    `);
+    window.scrollTo(0, document.body.scrollHeight);
+  };
+</script>

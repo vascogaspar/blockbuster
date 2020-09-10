@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="//cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css"
+    />
+    <link href="https://vjs.zencdn.net/7.5.5/video-js.css" rel="stylesheet" />
+    <style>
+      body {
+        font-family: monospace;
+      }
+      .static {
+        position: absolute;
+        background: white;
+      }
+
+      .static:hover {
+        opacity: 0;
+      }
+
+      .table-container {
+        margin-top: 30px;
+        padding-top: 30px;
+      }
+
+      form {
+        margin-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <h1><%= collection %></h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input
+        type="file"
+        name="file"
+        id="video-input"
+        accept=".mp4, .mov, .mkv"
+      />
+      <input type="hidden" name="collection" value="<%= collection %>" />
+      <input type="submit" value="upload" />
+    </form>
+
+    <div class="table-container">
+      <table class="table" style="width: 100%">
+        <thead>
+          <tr>
+            <th>-</th>
+            <th>duration</th>
+            <th>url</th>
+            <th>preview</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% results.forEach(function(result) { %>
+          <tr class="row" data-url="<%= url %><%= result %>">
+            <td>
+              <div class="preview-container">
+                <img
+                  class="static"
+                  width="100"
+                  src="<%= url %><%= result %>thumb.jpg"
+                />
+                <img
+                  class="active"
+                  width="100"
+                  src="<%= url %><%= result %>preview.gif"
+                />
+              </div>
+            </td>
+            <td class="duration"></td>
+            <td>
+              <pre><code><%= url %><%= result %>playlist.m3u8</code></pre>
+            </td>
+            <td>
+              <a
+                href="/preview?url=<%= encodeURIComponent(url + result + 'playlist.m3u8') %>"
+              >
+                preview
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('partials/logger'); %>
+
+    <script src="https://unpkg.com/video.js/dist/video.js"></script>
+    <script src="https://unpkg.com/videojs-contrib-hls/dist/videojs-contrib-hls.js"></script>
+    <script>
+      document.querySelectorAll(".example-video").forEach(function(pl) {
+        videojs(pl),
+          {
+            liveui: true
+          };
+      });
+
+      function getFormatedTime(timestamp) {
+        var hours = Math.floor(timestamp / 60 / 60);
+
+        // 37
+        var minutes = Math.floor(timestamp / 60) - hours * 60;
+
+        // 42
+        var seconds = timestamp % 60;
+
+        return (
+          hours.toString().padStart(2, "0") +
+          ":" +
+          minutes.toString().padStart(2, "0") +
+          ":" +
+          seconds.toString().padStart(2, "0")
+        );
+      }
+
+      $(document).ready(function() {
+        $("form").submit(function(e) {
+          e.preventDefault();
+          var formData = new FormData(this);
+          $.ajax({
+            type: "POST",
+            url: "/upload",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(r) {
+              $("form").trigger("reset");
+              location.reload();
+            },
+            error: function(e) {
+              console.log("some error", e);
+            }
+          });
+        });
+
+        $(".table").DataTable({
+          scrollX: true
+        });
+
+        $(".row").each(function(r) {
+          const self = this;
+          const url = $(this).data("url") + "meta.json";
+          fetch(url)
+            .then(res => res.json())
+            .then(resp => {
+              $(self)
+                .find(".duration")
+                .html(getFormatedTime(Math.floor(resp.format.duration)));
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
