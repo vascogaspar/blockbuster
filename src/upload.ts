@@ -50,10 +50,10 @@ class Upload {
         params.Delete.Objects.push({ Key: content.Key });
       });
       // @ts-ignore
-      // this.s3.deleteObjects(params, (err2: AWSError, data2: any) => {
-      //   if (err2) throw err2;
-      //   console.log(data2);
-      // });
+      this.s3.deleteObjects(params, (err2: AWSError, data2: any) => {
+        if (err2) throw err2;
+        console.log(data2);
+      });
     });
   }
 

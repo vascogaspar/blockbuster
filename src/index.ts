@@ -88,7 +88,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
       return res.status(500).send("something went wrong, rolling back");
     }
   }).catch(e => {
-     console.error('asdasdads',e)
      throw(e)
   });
 });
