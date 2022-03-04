@@ -49,7 +49,7 @@ export function processFile(
       // todo generate poster
     ];
 
-    Promise.all(buildProcesses(processes, sse, file, dir))
+    return Promise.all(buildProcesses(processes, sse, file, dir))
       .then(res)
       .catch(ex => {
         logger(sse, "clean everything", cleanup(file, dir));
@@ -65,7 +65,7 @@ export function cleanup(file: File, dir: string) {
       rimraf.sync(dir);
       res();
     } catch (ex) {
-      rej();
+      rej(ex);
     }
   });
 }
@@ -83,7 +83,7 @@ function generatePlaylist(file: File, dir: string) {
       .join("\n")}
     `;
 
-    fs.writeFile(`${dir}/playlist.m3u8`, content, err => {
+    return fs.writeFile(`${dir}/playlist.m3u8`, content, err => {
       if (err) rej(err);
       res();
     });
@@ -160,11 +160,25 @@ function copyOriginal(file: File, dir: string) {
 function shellProc(cmd: string, args: string[]) {
   return new Promise((res, rej) => {
     const spwn = spawn(cmd, args, { shell: true });
+    let output = ''
+    spwn.stdout.setEncoding('utf8');
+    spwn.stdout.on('data', (data) => {
+        data=data.toString();
+        output+=data;
+    });
+
+    spwn.stderr.setEncoding('utf8');
+    spwn.stderr.on('data', (data) => {
+        data=data.toString();
+        output+=data;
+    });
+
+
     spwn.on("close", code => {
       if (code === 0) {
         res();
       } else {
-        rej();
+        rej(new Error('failed on cmd: ' + cmd + ' args: ' + JSON.stringify(args) + ' output: ' + output));
       }
     });
   });
