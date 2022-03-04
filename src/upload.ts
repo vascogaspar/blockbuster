@@ -35,7 +35,7 @@ class Upload {
     // @ts-ignore
     let params = {
       Bucket: process.env.S3_BUCKET_NAME,
-      Prefix: collection + "/" + file.filename + "/"
+      Prefix: collection + "/" + file.filename + "/",
     };
 
     this.s3.listObjects(params, (err: AWSError, data: any) => {
@@ -50,10 +50,10 @@ class Upload {
         params.Delete.Objects.push({ Key: content.Key });
       });
       // @ts-ignore
-      this.s3.deleteObjects(params, (err2: AWSError, data2: any) => {
-        if (err2) throw err2;
-        console.log(data2);
-      });
+      // this.s3.deleteObjects(params, (err2: AWSError, data2: any) => {
+      //   if (err2) throw err2;
+      //   console.log(data2);
+      // });
     });
   }
 
@@ -67,6 +67,7 @@ class Upload {
       const buffer = fs.readFileSync(`${dir}/${f}`);
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
+        TargetPrefix: "log/",
         Key: `${collection}/${file.filename}/${f}`,
         Body: buffer,
         ACL: "public-read"

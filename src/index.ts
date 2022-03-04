@@ -18,13 +18,13 @@ const PORT = process.env.PORT || "8082";
 
 const app = express();
 app.use(morgan("dev"));
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }))
 
 const upload = multer({ dest: "dist/uploads/" });
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
 const Uploader = new Upload({
@@ -77,15 +77,19 @@ app.post("/upload", upload.single("file"), (req, res) => {
   const { collection } = req.body;
   const dir = path.resolve(`${__dirname}/uploads/temp-${file.filename}`);
 
-  processFile(file, dir, sse).then(async resp => {
-    cleanup(file, dir);
+  return processFile(file, dir, sse).then(async resp => {
     try {
       await Uploader.uploadFiles(file, dir, collection);
       return res.redirect("/collections/" + collection);
     } catch (ex) {
-      Uploader.abort(file, collection);
+      await Uploader.abort(file, collection);
+      console.error(ex)
+      await cleanup(file, dir);
       return res.status(500).send("something went wrong, rolling back");
     }
+  }).catch(e => {
+     console.error('asdasdads',e)
+     throw(e)
   });
 });
 
